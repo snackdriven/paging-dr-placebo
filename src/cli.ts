@@ -4,10 +4,17 @@ import { SchedulingDatabase } from './backend/database.js';
 import { ScenarioRunner } from './evaluation/scenario-runner.js';
 import { SCENARIO_CATALOG } from './evaluation/scenarios.js';
 import { EvaluationReporter } from './evaluation/evaluation-reporter.js';
+import { PlaygroundServer } from './ui/playground-server.js';
 
 const command = process.argv[2] ?? 'report:generate';
 
-if (command === 'db:setup') {
+if (command === 'ui:start') {
+  const port = Number(process.env.PORT ?? 4321);
+  const server = new PlaygroundServer();
+  server.start(port).then((url) => {
+    console.log(`🩺 Paging Dr. Placebo UI Playground running at: ${url}`);
+  });
+} else if (command === 'db:setup') {
   const clock = new ControllableClock('2026-10-27T09:00:00.000Z');
   const db = new SchedulingDatabase(':memory:', clock);
   db.resetAndSeed();
@@ -51,7 +58,7 @@ if (command === 'report:generate') {
     process.exit(1);
   }
   process.exit(0);
+} else {
+  console.error(`Unknown CLI command: ${command}`);
+  process.exit(1);
 }
-
-console.error(`Unknown CLI command: ${command}`);
-process.exit(1);

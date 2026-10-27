@@ -19,7 +19,10 @@ This laboratory evaluates a healthcare scheduling agent across four orthogonal l
 Run all commands from `c:\Users\bette\Desktop\GH clones\paging-dr-placebo`:
 
 ```bash
-# 1. Database setup & seed verification
+# 1. Launch Interactive UI Playground (http://127.0.0.1:4321)
+npm run ui
+
+# 2. Database setup & seed verification
 npm run db:setup
 
 # 2. Unit tests (Backend transactions, auth tokens, patient isolation, idempotency, fault injection)

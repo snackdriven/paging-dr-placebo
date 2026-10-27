@@ -9,6 +9,7 @@
   },
   "scripts": {
     "db:setup": "node --no-warnings --import tsx src/cli.ts db:setup",
+    "ui": "node --no-warnings --import tsx src/cli.ts ui:start",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "eval:narrow": "vitest run tests/eval-narrow",

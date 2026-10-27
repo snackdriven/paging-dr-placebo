@@ -1,0 +1,33 @@
+{
+  "name": "healthcare-scheduling-eval-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic Evidence-Driven Healthcare Scheduling Agent Evaluation Laboratory (SIMULATION ONLY - NO REAL PHI)",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "db:setup": "node --no-warnings --import tsx src/cli.ts db:setup",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "eval:narrow": "vitest run tests/eval-narrow",
+    "eval:conversation": "vitest run tests/eval-conversation",
+    "eval:voice": "vitest run tests/eval-voice",
+    "eval:llm": "vitest run tests/eval-llm",
+    "test:observer": "vitest run tests/observer",
+    "eval:full": "vitest run --exclude tests/eval-llm/**",
+    "report:generate": "node --no-warnings --import tsx src/cli.ts report:generate",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm run typecheck && npm run eval:full && npm run report:generate"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.7"
+  }
+}

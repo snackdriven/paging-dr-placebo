@@ -1,6 +1,6 @@
-# Evidence-Driven Healthcare Scheduling Agent Evaluation Lab
+# Paging Dr. Placebo (`paging-dr-placebo`)
 
-> **SIMULATION NOTICE:** This repository is a strictly synthetic evaluation laboratory using fictional patient (`PAT-001`..`PAT-003`), provider (`PRV-001`..`PRV-002`), and appointment fixtures. It never accesses real patient records, clinical systems, or external notification channels. It is **NOT** clinically validated or HIPAA-compliant.
+> **SIMULATION NOTICE:** This repository is a strictly synthetic healthcare scheduling agent evaluation laboratory using fictional patient (`PAT-001`..`PAT-003`), provider (`PRV-001`..`PRV-002`), and appointment fixtures. It never accesses real patient records, clinical systems, or external notification channels. It is **NOT** clinically validated or HIPAA-compliant.
 
 ## Core Principle
 
@@ -16,7 +16,7 @@ This laboratory evaluates a healthcare scheduling agent across four orthogonal l
 
 ## Execution Commands (`C4`)
 
-Run all commands from `c:\Users\bette\Desktop\GH clones\healthcare-scheduling-eval-lab`:
+Run all commands from `c:\Users\bette\Desktop\GH clones\paging-dr-placebo`:
 
 ```bash
 # 1. Database setup & seed verification

@@ -1,6 +1,6 @@
 # Data Model & Schemas (`schemaVersion: "1.0.0"`)
 
-All entities carry `schemaVersion: "1.0.0"` and are validated at runtime with Zod schemas in [`src/types/schemas.ts`](file:///c:/Users/bette/Desktop/GH%20clones/healthcare-scheduling-eval-lab/src/types/schemas.ts).
+All entities carry `schemaVersion: "1.0.0"` and are validated at runtime with Zod schemas in [`src/types/schemas.ts`](../src/types/schemas.ts).
 
 ## 1. Relational SQLite Schema
 

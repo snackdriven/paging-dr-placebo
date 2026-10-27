@@ -1,5 +1,7 @@
 # Paging Dr. Placebo (`paging-dr-placebo`)
 
+> **Live Interactive UI Playground:** [**https://snackdriven.github.io/paging-dr-placebo/**](https://snackdriven.github.io/paging-dr-placebo/)
+>
 > **SIMULATION NOTICE:** This repository is a strictly synthetic healthcare scheduling agent evaluation laboratory using fictional patient (`PAT-001`..`PAT-003`), provider (`PRV-001`..`PRV-002`), and appointment fixtures. It never accesses real patient records, clinical systems, or external notification channels. It is **NOT** clinically validated or HIPAA-compliant.
 
 ## Core Principle

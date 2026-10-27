@@ -1775,14 +1775,76 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const totalRawEvents = state.auditEvents.length + state.toolEvents.length;
       document.getElementById('auditCountBadge').textContent = totalRawEvents + ' entries';
 
+      const HUMAN_AUDIT_EVENTS = {
+        'VERIFICATION_SUCCEEDED': {
+          text: 'Caller birthday & PIN verified',
+          badgeText: 'Verified',
+          badgeClass: 'badge-pass'
+        },
+        'VERIFICATION_FAILED': {
+          text: 'Wrong birthday or PIN rejected',
+          badgeText: 'Rejected',
+          badgeClass: 'badge-fail'
+        },
+        'VERIFICATION_REVOKED': {
+          text: 'Previous caller PIN session closed',
+          badgeText: 'Closed',
+          badgeClass: 'badge-sim'
+        },
+        'MUTATION_ATTEMPTED': {
+          text: 'AI asked the database to change the calendar',
+          badgeText: 'Checking Rules...',
+          badgeClass: 'badge-info'
+        },
+        'MUTATION_COMMITTED': {
+          text: 'Database approved & saved the appointment',
+          badgeText: 'Saved',
+          badgeClass: 'badge-pass'
+        },
+        'MUTATION_REJECTED': {
+          text: 'Database blocked the request (rule or conflict)',
+          badgeText: 'Blocked',
+          badgeClass: 'badge-fail'
+        },
+        'IDEMPOTENT_REPLAY': {
+          text: 'Duplicate retry recognized (prevented double-booking)',
+          badgeText: 'Safe Retry',
+          badgeClass: 'badge-pass'
+        },
+        'RECONCILIATION_QUERIED': {
+          text: 'AI double-checked if the booking was saved',
+          badgeText: 'Checked',
+          badgeClass: 'badge-info'
+        },
+        'ESCALATION_RECORDED': {
+          text: 'Paged a human receptionist',
+          badgeText: 'Transferred',
+          badgeClass: 'badge-pass'
+        }
+      };
+
       document.getElementById('auditLogList').innerHTML = state.auditEvents.length === 0
         ? '<div style="color: var(--muted);">No database changes recorded yet.</div>'
-        : state.auditEvents.map(a => \`
-          <div class="log-entry">
-            <strong>Step #\${a.sequenceId}:</strong> \${humanizeText(a.eventType.replace(/_/g, ' '))}
-            <span class="badge \${a.outcome === 'SUCCESS' ? 'badge-pass' : 'badge-fail'}">\${a.outcome}</span>
-          </div>
-        \`).join('');
+        : state.auditEvents.map(a => {
+          const info = HUMAN_AUDIT_EVENTS[a.eventType] || {
+            text: humanizeText(a.eventType.replace(/_/g, ' ')),
+            badgeText: a.outcome,
+            badgeClass: a.outcome === 'COMMITTED' ? 'badge-pass' : (a.outcome === 'UNKNOWN' ? 'badge-info' : 'badge-fail')
+          };
+          const who = a.patientId ? (CREW_NAMES[a.patientId] || a.patientId) : '';
+          const slot = a.details && a.details.slotId ? (SLOT_LABELS[a.details.slotId] || a.details.slotId) : '';
+          const reason = a.details && a.details.reason ? humanizeText(a.details.reason) : '';
+          const extra = [who ? 'Caller: ' + who : '', slot ? 'Time: ' + slot : '', reason ? 'Reason: ' + reason : ''].filter(Boolean).join(' · ');
+          return \`
+            <div class="log-entry">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <span><strong>Step #\${a.sequenceId}:</strong> \${info.text}</span>
+                <span class="badge \${info.badgeClass}">\${info.badgeText}</span>
+              </div>
+              \${extra ? \`<div style="color: var(--muted); font-size: 0.73rem; margin-top: 3px;">\${extra}</div>\` : ''}
+            </div>
+          \`;
+        }).join('');
 
       document.getElementById('toolLogList').innerHTML = state.toolEvents.length === 0
         ? '<div style="color: var(--muted);">No AI actions yet.</div>'

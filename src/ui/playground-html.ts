@@ -1561,11 +1561,16 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
 
       let serverHeadline = 'Waiting for AI';
       let serverSub = 'Phone line & server connection';
+      const isSuccessTransport = lastTool && !lastTool.injectedFaultRuleId && (
+        lastTool.transportOutcome === 'COMMITTED' ||
+        lastTool.transportOutcome === 'NO_OP' ||
+        lastTool.transportOutcome === 'RECONCILED_COMMITTED'
+      );
       if (lastTool) {
         if (lastTool.injectedFaultRuleId) {
           serverHeadline = 'Glitch on the line';
           serverSub = 'Simulated connection or server bug';
-        } else if (lastTool.transportOutcome === 'HTTP_200') {
+        } else if (isSuccessTransport) {
           serverHeadline = 'Server replied: OK';
           serverSub = 'Request went through cleanly';
         } else {
@@ -1617,7 +1622,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
 
       badge2.textContent = lastTool ? 'Done' : 'Idle';
 
-      if (lastTool && (lastTool.injectedFaultRuleId || lastTool.transportOutcome !== 'HTTP_200')) {
+      if (lastTool && !isSuccessTransport) {
         card3.className = 'pillar-card pillar-warn';
         badge3.className = 'badge badge-sim';
         badge3.textContent = lastTool.injectedFaultRuleId ? 'Glitch' : 'Refused';

@@ -611,6 +611,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       </p>
     </div>
     <div class="header-actions">
+      <a href="./demo.html" style="background: rgba(168, 85, 247, 0.16); border: 1px solid #a855f7; color: #f3e8ff; border-radius: 8px; padding: 8px 13px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">Defect Lifecycle Demo →</a>
       <span id="clockDisplay" class="badge badge-info">Clinic Clock: 9:00 AM</span>
       <button class="btn-primary" id="runAllBtn" onclick="runAllCatalogScenarios()">Run All 21 Tests</button>
       <button class="btn-danger" onclick="applyConfigAndReset()">Start Fresh</button>

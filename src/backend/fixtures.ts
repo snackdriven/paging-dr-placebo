@@ -10,23 +10,44 @@ export const SYNTHETIC_PATIENTS: readonly Patient[] = Object.freeze([
   {
     schemaVersion: SCHEMA_VERSION,
     patientId: 'PAT-001',
-    fullName: 'Elena Vance (Synthetic)',
+    fullName: 'Philip J. Fry (Synthetic)',
     dob: '1985-04-12',
     verificationPin: '4821'
   },
   {
     schemaVersion: SCHEMA_VERSION,
     patientId: 'PAT-002',
-    fullName: 'Marcus Sterling (Synthetic)',
+    fullName: 'Turanga Leela (Synthetic)',
     dob: '1978-11-03',
     verificationPin: '9104'
   },
   {
     schemaVersion: SCHEMA_VERSION,
     patientId: 'PAT-003',
-    fullName: 'Clara Lin (Synthetic)',
+    fullName: 'Bender Bending Rodriguez (Synthetic)',
     dob: '1992-07-22',
     verificationPin: '3350'
+  },
+  {
+    schemaVersion: SCHEMA_VERSION,
+    patientId: 'PAT-004',
+    fullName: 'Amy Wong (Synthetic)',
+    dob: '1995-05-04',
+    verificationPin: '3000'
+  },
+  {
+    schemaVersion: SCHEMA_VERSION,
+    patientId: 'PAT-005',
+    fullName: 'Hubert J. Farnsworth (Synthetic)',
+    dob: '1941-04-09',
+    verificationPin: '1600'
+  },
+  {
+    schemaVersion: SCHEMA_VERSION,
+    patientId: 'PAT-006',
+    fullName: 'Hermes Conrad (Synthetic)',
+    dob: '1979-07-15',
+    verificationPin: '0036'
   }
 ]);
 
@@ -34,13 +55,13 @@ export const SYNTHETIC_PROVIDERS: readonly Provider[] = Object.freeze([
   {
     schemaVersion: SCHEMA_VERSION,
     providerId: 'PRV-001',
-    fullName: 'Dr. Mateo Rivera (Synthetic Cardiology)',
-    specialty: 'Cardiology'
+    fullName: 'Dr. John A. Zoidberg (Synthetic Xenobiology & Internal Decapod Medicine)',
+    specialty: 'Xenobiology & Internal Medicine'
   },
   {
     schemaVersion: SCHEMA_VERSION,
     providerId: 'PRV-002',
-    fullName: 'Dr. Hannah Okafor (Synthetic Primary Care)',
+    fullName: 'Prof. Ogden Wernstrom (Synthetic Cybernetic Primary Care)',
     specialty: 'Primary Care'
   }
 ]);

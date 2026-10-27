@@ -346,17 +346,23 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       </div>
 
       <div class="panel">
-        <h2>🔑 Synthetic Patient Credentials Cheat-Sheet</h2>
+        <h2>🔑 Planet Express Patient Cheat-Sheet</h2>
         <table>
           <thead>
-            <tr><th>ID</th><th>Name</th><th>DOB</th><th>PIN</th></tr>
+            <tr><th>ID</th><th>Futurama Crew</th><th>DOB</th><th>PIN</th></tr>
           </thead>
           <tbody>
-            <tr><td>PAT-001</td><td>Elena Vance</td><td>1985-04-12</td><td>4821</td></tr>
-            <tr><td>PAT-002</td><td>Marcus Sterling</td><td>1978-11-03</td><td>9104</td></tr>
-            <tr><td>PAT-003</td><td>Clara Lin</td><td>1992-07-22</td><td>3350</td></tr>
+            <tr><td>PAT-001</td><td>Philip J. Fry</td><td>1985-04-12</td><td>4821</td></tr>
+            <tr><td>PAT-002</td><td>Turanga Leela</td><td>1978-11-03</td><td>9104</td></tr>
+            <tr><td>PAT-003</td><td>Bender B. Rodriguez</td><td>1992-07-22</td><td>3350</td></tr>
+            <tr><td>PAT-004</td><td>Amy Wong</td><td>1995-05-04</td><td>3000</td></tr>
+            <tr><td>PAT-005</td><td>Prof. Farnsworth</td><td>1941-04-09</td><td>1600</td></tr>
+            <tr><td>PAT-006</td><td>Hermes Conrad</td><td>1979-07-15</td><td>0036</td></tr>
           </tbody>
         </table>
+        <div style="font-size: 0.73rem; color: var(--muted); margin-top: 6px;">
+          Providers: <strong>PRV-001</strong> (Dr. John A. Zoidberg) · <strong>PRV-002</strong> (Prof. Ogden Wernstrom)
+        </div>
       </div>
 
       <div class="panel">

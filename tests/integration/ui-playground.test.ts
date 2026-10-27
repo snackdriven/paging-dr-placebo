@@ -90,7 +90,7 @@ describe('UI Playground Server & Interactive Sandbox API', () => {
     db.exec('BEGIN IMMEDIATE TRANSACTION');
     db.prepare('INSERT INTO patients (patient_id, full_name, dob, verification_pin) VALUES (?, ?, ?, ?)').run(
       'PAT-001',
-      'Elena Vance',
+      'Philip J. Fry',
       '1985-04-12',
       '4821'
     );

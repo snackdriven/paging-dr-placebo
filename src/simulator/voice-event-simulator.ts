@@ -45,8 +45,9 @@ export class VoiceEventSimulator {
       advanceClockMs?: number;
     }
   ): ConversationTurn {
-    if (params.advanceClockMs && params.advanceClockMs > 0) {
-      this.clock.advanceMs(params.advanceClockMs);
+    const stepAdvanceMs = params.advanceClockMs ?? 250;
+    if (stepAdvanceMs > 0) {
+      this.clock.advanceMs(stepAdvanceMs);
     }
 
     const type = params.voiceEventType ?? 'NORMAL_TURN';

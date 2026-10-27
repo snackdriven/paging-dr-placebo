@@ -291,6 +291,9 @@ export class SchedulingAgent {
       voiceEventType: voiceType
     });
 
+    // Advance clock slightly so agent tool calls & replies have a strictly later timestamp than the caller prompt
+    this.clock.advanceMs(10);
+
     // 1. Silence Event Handling (T15, REQ-C08)
     if (voiceType === 'SILENCE' || input.text.trim().length === 0) {
       return this.appendTurn({

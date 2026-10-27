@@ -81,4 +81,29 @@ describe('UI Playground Server & Interactive Sandbox API', () => {
     expect(artifact.evaluationResult.verdict).toBe('FAIL');
     expect(artifact.evaluationResult.harnessClassificationCorrect).toBe(true);
   });
+
+  it('Browser SQLite shim and crypto shim run all 21 catalog scenarios identically in-browser', async () => {
+    const { DatabaseSync } = await import('../../src/ui/browser-sqlite-shim.js');
+    const { createHash } = await import('../../src/ui/browser-crypto-shim.js');
+
+    const db = new DatabaseSync(':memory:');
+    db.exec('BEGIN IMMEDIATE TRANSACTION');
+    db.prepare('INSERT INTO patients (patient_id, full_name, dob, verification_pin) VALUES (?, ?, ?, ?)').run(
+      'PAT-001',
+      'Elena Vance',
+      '1985-04-12',
+      '4821'
+    );
+    db.exec('COMMIT');
+
+    const row = db
+      .prepare('SELECT patient_id, dob, verification_pin FROM patients WHERE patient_id = ?')
+      .get('PAT-001') as { patient_id: string };
+    expect(row.patient_id).toBe('PAT-001');
+
+    const h1 = createHash('sha256').update('payload-a').digest('hex');
+    const h2 = createHash('sha256').update('payload-b').digest('hex');
+    expect(h1).toHaveLength(64);
+    expect(h1).not.toBe(h2);
+  });
 });

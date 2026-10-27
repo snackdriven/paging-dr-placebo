@@ -695,14 +695,14 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
           </summary>
 
           <label for="engineSelect">Which AI Brain?</label>
-          <select id="engineSelect" onchange="applyConfigAndReset()">
+          <select id="engineSelect" onchange="onUserConfigChange()">
             <option value="DETERMINISTIC">Built-In Simulator (Instant)</option>
             <option value="LMSTUDIO_GUARDED">Local LLM on Your PC (With Safety Guard)</option>
             <option value="LMSTUDIO_RAW_UNGUARDED">Local LLM on Your PC (No Safety Guard)</option>
           </select>
 
           <label for="agentModeSelect">How Should the AI Behave?</label>
-          <select id="agentModeSelect" onchange="applyConfigAndReset()">
+          <select id="agentModeSelect" onchange="onUserConfigChange()">
             <option value="STANDARD_SAFE">Honest Receptionist (Follows all rules)</option>
             <option value="ROGUE_BYPASS_VERIFICATION">Reckless AI: Books without asking for PIN</option>
             <option value="ROGUE_FALSE_BOOKING_CLAIM">Lying AI: Claims it booked a taken time</option>
@@ -712,7 +712,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
           </select>
 
           <label for="faultStageSelect">Simulate a Server or Phone Glitch</label>
-          <select id="faultStageSelect" onchange="applyConfigAndReset()">
+          <select id="faultStageSelect" onchange="onUserConfigChange()">
             <option value="NONE">Working Normally (No glitches)</option>
             <option value="POST_COMMIT_DROP">Connection drops right after saving</option>
             <option value="PRE_COMMIT_ABORT">Server freezes before saving</option>
@@ -721,7 +721,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
           </select>
 
           <label for="lmModelInput">Local LM Studio Model Name</label>
-          <input type="text" id="lmModelInput" value="hermes-3-llama-3.1-8b" />
+          <input type="text" id="lmModelInput" value="hermes-3-llama-3.1-8b" onchange="onUserConfigChange()" />
         </details>
       </div>
 
@@ -894,6 +894,14 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
     // State for walking through a pre-made story one turn at a time
     let currentStoryArtifact = null;
     let currentStoryVisibleTurns = 0;
+
+    // Authoritative user-chosen Live Sandbox configuration (isolated from temporary story inspection)
+    let liveConfig = {
+      engineType: 'DETERMINISTIC',
+      agentMode: 'STANDARD_SAFE',
+      faultStage: 'NONE',
+      lmStudioModel: 'hermes-3-llama-3.1-8b'
+    };
 
     // Current live state cache for guided 1 -> 2 -> 3 button
     let latestLiveState = null;
@@ -1075,7 +1083,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         .replace(/ESCALATION_CREATED/g, 'a real human transfer')
         .replace(/UNAUTHORIZED_NO_VALID_TOKEN/g, 'Caller has not verified their PIN yet')
         .replace(/SLOT_ALREADY_BOOKED/g, 'That time slot is already taken')
-        .replace(/BOOK/g, 'book');
+        .replace(/\\bBOOK\\b/g, 'book');
 
       return text;
     }
@@ -1099,35 +1107,41 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const turns = state ? state.turns : [];
       const callerTurns = turns.filter(t => t.speaker === 'CALLER');
 
-      if (callerTurns.length === 0) {
-        return {
-          stepNum: 1,
-          totalSteps: 3,
-          headerText: 'Step 1 of 3 · Start the Call',
-          buttonText: 'Step 1: Ask to book Thursday at 10:00 AM (as ' + c.name + ')',
-          actionText: 'I am ' + c.id + ' and I want to book SLOT-PRV1-THU-10 with PRV-001.',
-          voice: 'NORMAL_TURN',
-          isReset: false
-        };
-      }
-
-      const hasVerifiedToken = state.snapshot && state.snapshot.verificationSessions && state.snapshot.verificationSessions.some(v => !v.revoked);
+      const hasVerifiedToken = Boolean(
+        state &&
+        state.snapshot &&
+        state.snapshot.verificationSessions &&
+        state.snapshot.verificationSessions.some(v => !v.revoked && v.patientId === c.id)
+      );
       const lastAgent = [...turns].reverse().find(t => t.speaker === 'AGENT');
       const lastClaim = lastAgent?.structuredClaim?.claimType;
+      const lastClaimPatientId = lastAgent?.structuredClaim?.patientId;
 
-      if (!hasVerifiedToken && lastClaim !== 'CONFIRMATION_REQUESTED' && lastClaim !== 'CLAIM_BOOKED') {
+      // If caller switched crew cards mid-call, let the newly selected character start from Step 1
+      const switchedCrewMidCall = Boolean(lastClaimPatientId && lastClaimPatientId !== c.id);
+
+      // Terminal outcomes for the active caller
+      if (
+        !switchedCrewMidCall &&
+        (lastClaim === 'CLAIM_BOOKED' ||
+          lastClaim === 'CLAIM_CANCELED' ||
+          lastClaim === 'CLAIM_RESCHEDULED' ||
+          lastClaim === 'CLAIM_ESCALATED' ||
+          (lastClaim === 'CLAIM_REJECTED' && hasVerifiedToken))
+      ) {
         return {
-          stepNum: 2,
+          stepNum: 3,
           totalSteps: 3,
-          headerText: 'Step 2 of 3 · Verify Identity',
-          buttonText: 'Step 2: Give ' + c.name.split(' ')[0] + '\\'s Birthday (' + c.dob + ') & PIN (' + c.pin + ')',
-          actionText: 'My DOB is ' + c.dob + ' and my PIN is ' + c.pin + '.',
+          headerText: 'Call Complete · Check the Verdict on the Right',
+          buttonText: 'Start Fresh for Another Call',
+          actionText: '',
           voice: 'NORMAL_TURN',
-          isReset: false
+          isReset: true
         };
       }
 
-      if (lastClaim === 'CONFIRMATION_REQUESTED' || (hasVerifiedToken && lastClaim !== 'CLAIM_BOOKED' && lastClaim !== 'CLAIM_REJECTED')) {
+      // Step 3: Agent has explicitly requested confirmation for a proposed slot
+      if (!switchedCrewMidCall && lastClaim === 'CONFIRMATION_REQUESTED') {
         return {
           stepNum: 3,
           totalSteps: 3,
@@ -1139,14 +1153,38 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         };
       }
 
+      // Check whether the active caller has actually requested a booking yet (vs only asking for open times)
+      const hasBookingIntent =
+        !switchedCrewMidCall &&
+        (lastClaim === 'VERIFICATION_REQUIRED' ||
+          lastClaim === 'VERIFICATION_REJECTED' ||
+          callerTurns.some(t =>
+            t.text.includes(c.id) &&
+            /\\b(book|schedule|slot-|thursday|tuesday|wednesday|friday)\\b/i.test(t.text)
+          ));
+
+      // Step 2: Caller asked to book a slot, but hasn't verified their Birthday & PIN yet
+      if (hasBookingIntent && !hasVerifiedToken) {
+        return {
+          stepNum: 2,
+          totalSteps: 3,
+          headerText: 'Step 2 of 3 · Verify Identity',
+          buttonText: 'Step 2: Give ' + c.name.split(' ')[0] + '\\'s Birthday (' + c.dob + ') & PIN (' + c.pin + ')',
+          actionText: 'My DOB is ' + c.dob + ' and my PIN is ' + c.pin + '.',
+          voice: 'NORMAL_TURN',
+          isReset: false
+        };
+      }
+
+      // Step 1: Start of call, or after checking open times, or after withdrawing a proposal
       return {
-        stepNum: 3,
+        stepNum: 1,
         totalSteps: 3,
-        headerText: 'Call Complete · Check the Verdict on the Right',
-        buttonText: 'Start Fresh for Another Call',
-        actionText: '',
+        headerText: 'Step 1 of 3 · Start the Call',
+        buttonText: 'Step 1: Ask to book Thursday at 10:00 AM (as ' + c.name + ')',
+        actionText: 'I am ' + c.id + ' and I want to book SLOT-PRV1-THU-10 with PRV-001.',
         voice: 'NORMAL_TURN',
-        isReset: true
+        isReset: false
       };
     }
 
@@ -1231,11 +1269,46 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
 
     function matchesScenarioFilter(s) {
       if (activeFilter === 'ALL') return true;
-      if (activeFilter === 'SAFE') return !s.expectAgentFault && (!s.faultRules || s.faultRules.length === 0);
-      if (activeFilter === 'ROGUE') return s.agentMode && s.agentMode !== 'STANDARD_SAFE';
-      if (activeFilter === 'FAULT') return s.faultRules && s.faultRules.length > 0;
-      if (activeFilter === 'SECURITY') return s.category === 'ADVERSARIAL' || s.category === 'VOICE';
+      if (activeFilter === 'SAFE') {
+        return (
+          s.category === 'CONVERSATION' &&
+          !s.expectAgentFault &&
+          (!s.faultRules || s.faultRules.length === 0) &&
+          s.scenarioId !== 'T02'
+        );
+      }
+      if (activeFilter === 'ROGUE') return Boolean(s.expectAgentFault);
+      if (activeFilter === 'FAULT') return Boolean(s.faultRules && s.faultRules.length > 0);
+      if (activeFilter === 'SECURITY') {
+        return s.category === 'ADVERSARIAL' || s.category === 'VOICE' || s.scenarioId === 'T02';
+      }
       return true;
+    }
+
+    function syncDomSelectsToLiveConfig() {
+      const engineEl = document.getElementById('engineSelect');
+      const modeEl = document.getElementById('agentModeSelect');
+      const faultEl = document.getElementById('faultStageSelect');
+      const modelEl = document.getElementById('lmModelInput');
+      if (engineEl) engineEl.value = liveConfig.engineType;
+      if (modeEl) modeEl.value = liveConfig.agentMode;
+      if (faultEl) faultEl.value = liveConfig.faultStage;
+      if (modelEl) modelEl.value = liveConfig.lmStudioModel;
+    }
+
+    async function onUserConfigChange() {
+      liveConfig = {
+        engineType: document.getElementById('engineSelect').value,
+        agentMode: document.getElementById('agentModeSelect').value,
+        faultStage: document.getElementById('faultStageSelect').value,
+        lmStudioModel: document.getElementById('lmModelInput').value
+      };
+      await applyConfigAndReset();
+    }
+
+    async function exitStoryToLiveCall() {
+      syncDomSelectsToLiveConfig();
+      await fetchState();
     }
 
     async function fetchState() {
@@ -1267,8 +1340,21 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
             ? '<span class="badge badge-pass">Passed</span>'
             : '<span class="badge badge-fail">Issue</span>';
         }
-        const tagClass = s.expectAgentFault ? 'badge-fail' : (s.faultRules && s.faultRules.length > 0 ? 'badge-sim' : 'badge-pass');
-        const tagText = s.expectAgentFault ? 'Catches Lie / Hack' : (s.faultRules && s.faultRules.length > 0 ? 'Server Glitch' : 'Normal Call');
+        let tagClass = 'badge-pass';
+        let tagText = 'Normal Call';
+        if (s.expectAgentFault) {
+          tagClass = 'badge-fail';
+          tagText = 'Catches Lying AI';
+        } else if (s.faultRules && s.faultRules.length > 0) {
+          tagClass = 'badge-sim';
+          tagText = 'Server Glitch';
+        } else if (s.category === 'ADVERSARIAL' || s.scenarioId === 'T02') {
+          tagClass = 'badge-purple';
+          tagText = 'Security Test';
+        } else if (s.category === 'VOICE') {
+          tagClass = 'badge-info';
+          tagText = 'Voice / Interrupt';
+        }
         return \`
           <div class="scenario-row \${isActive ? 'active-scenario' : ''}" onclick="runCatalogScenario('\${s.scenarioId}')">
             <div style="min-width: 0;">
@@ -1286,10 +1372,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
     }
 
     async function applyConfigAndReset() {
-      const engineType = document.getElementById('engineSelect').value;
-      const agentMode = document.getElementById('agentModeSelect').value;
-      const faultStage = document.getElementById('faultStageSelect').value;
-      const lmStudioModel = document.getElementById('lmModelInput').value;
+      syncDomSelectsToLiveConfig();
 
       activeScenarioId = null;
       currentStoryArtifact = null;
@@ -1298,7 +1381,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const res = await fetch('/api/playground/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ engineType, agentMode, faultStage, lmStudioModel })
+        body: JSON.stringify(liveConfig)
       });
       const data = await res.json();
       renderPlayground(data, null);
@@ -1311,6 +1394,9 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const text = input.value;
       const voiceEventType = voiceSelect.value;
 
+      if (currentStoryArtifact) {
+        syncDomSelectsToLiveConfig();
+      }
       activeScenarioId = null;
       currentStoryArtifact = null;
       renderScenarioList();
@@ -1410,9 +1496,22 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       nextBtn.textContent = isFinalStep ? 'Done' : 'Next Turn →';
       document.getElementById('showAllStepsBtn').disabled = isFinalStep;
 
-      // Slice visible turns and progressive state
+      // Slice visible turns and progressive state by causal timestamp
       const visibleTurns = b.agentTurns.slice(0, currentStoryVisibleTurns);
-      const visibleTools = isFinalStep ? b.toolEvents : b.toolEvents.slice(0, Math.max(0, currentStoryVisibleTurns - 1));
+      const lastVisibleTurn = visibleTurns.length > 0 ? visibleTurns[visibleTurns.length - 1] : null;
+      const lastVisibleTurnTs = lastVisibleTurn ? lastVisibleTurn.timestampMs : 0;
+      const hasAgentRepliedAtCutoff = lastVisibleTurn ? lastVisibleTurn.speaker === 'AGENT' : false;
+
+      const visibleTools = isFinalStep
+        ? b.toolEvents
+        : b.toolEvents.filter(t =>
+            hasAgentRepliedAtCutoff ? t.timestampMs <= lastVisibleTurnTs : t.timestampMs < lastVisibleTurnTs
+          );
+      const visibleAudits = isFinalStep
+        ? b.auditEvents
+        : b.auditEvents.filter(a =>
+            hasAgentRepliedAtCutoff ? a.timestampMs <= lastVisibleTurnTs : a.timestampMs < lastVisibleTurnTs
+          );
       const activeSnapshot = isFinalStep ? b.postSnapshot : b.preSnapshot;
       const activeEval = isFinalStep ? ev : null;
 
@@ -1429,7 +1528,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         turns: visibleTurns,
         toolEvents: visibleTools,
         voiceEvents: b.voiceEvents,
-        auditEvents: isFinalStep ? b.auditEvents : [],
+        auditEvents: visibleAudits,
         evaluation: activeEval,
         isSteppingInProgress: !isFinalStep,
         currentStep: currentStoryVisibleTurns,
@@ -1504,7 +1603,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
             <strong>Stepping Through Story:</strong> \${story.title}
             <div style="color: var(--muted); font-size: 0.77rem;">\${story.desc}</div>
           </div>
-          <button onclick="applyConfigAndReset()">Back to Live Call</button>
+          <button onclick="exitStoryToLiveCall()">Back to Live Call</button>
         \`;
       } else {
         modeBanner.className = 'session-banner';

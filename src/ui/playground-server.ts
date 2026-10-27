@@ -4,6 +4,7 @@ import {
   SCHEMA_VERSION,
   type FaultRule,
   type FaultStage,
+  type OperationOutcome,
   type ScenarioDefinition,
   type VoiceEventType
 } from '../types/schemas.js';
@@ -136,6 +137,34 @@ export class PlaygroundServer {
       .filter((a) => a.status === 'CANCELED')
       .map((a) => a.appointmentId);
 
+    const audits = this.db.getAuditEvents();
+    const tools = this.injector.getToolEvents();
+    const commitAudits = audits.filter((a) => a.eventType === 'MUTATION_COMMITTED');
+    const replayAudits = audits.filter((a) => a.eventType === 'MUTATION_IDEMPOTENT_REPLAY');
+    const rejectAudits = audits.filter((a) => a.eventType === 'MUTATION_REJECTED');
+
+    const derivedBackendOutcome: OperationOutcome =
+      commitAudits.length > 0
+        ? 'COMMITTED'
+        : replayAudits.length > 0
+          ? 'NO_OP'
+          : rejectAudits.length > 0
+            ? 'REJECTED'
+            : 'NOT_ATTEMPTED';
+
+    const reconEvents = tools.filter((t) => t.toolName === 'reconcileOperation');
+    const lastMutationTool = [...tools].reverse().find((t) => t.toolName === 'executeMutation');
+    let derivedReconciledOutcome: OperationOutcome = derivedBackendOutcome;
+    if (reconEvents.length > 0) {
+      derivedReconciledOutcome = String(
+        reconEvents[reconEvents.length - 1]!.response.outcome ?? 'UNKNOWN'
+      ) as OperationOutcome;
+    } else if (lastMutationTool?.transportOutcome === 'UNKNOWN') {
+      derivedReconciledOutcome = 'UNKNOWN';
+    } else if (replayAudits.length > 0 && commitAudits.length > 0) {
+      derivedReconciledOutcome = 'COMMITTED';
+    }
+
     const dynamicScenario: ScenarioDefinition = {
       schemaVersion: SCHEMA_VERSION,
       scenarioId: 'INTERACTIVE-SANDBOX',
@@ -158,8 +187,8 @@ export class PlaygroundServer {
         this.agentMode !== 'STANDARD_SAFE' || this.engineType === 'LMSTUDIO_RAW_UNGUARDED',
       faultRules: this.faultRules,
       expectedOutcome: {
-        backendOutcome: newlyBookedSlotIds.length > 0 ? 'COMMITTED' : 'NOT_ATTEMPTED',
-        reconciledOutcome: newlyBookedSlotIds.length > 0 ? 'COMMITTED' : 'NOT_ATTEMPTED',
+        backendOutcome: derivedBackendOutcome,
+        reconciledOutcome: derivedReconciledOutcome,
         expectedBookedSlotIds: newlyBookedSlotIds,
         expectedCanceledAppointmentIds: newlyCanceledIds,
         expectedEscalationCount: postSnapshot.escalations.length,

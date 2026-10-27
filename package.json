@@ -10,6 +10,8 @@
   "scripts": {
     "db:setup": "node --no-warnings --import tsx src/cli.ts db:setup",
     "ui": "node --no-warnings --import tsx src/cli.ts ui:start",
+    "demo:lifecycle": "node --no-warnings --import tsx src/demo/run-defect-lifecycle.ts",
+    "test:demo": "vitest run tests/demo",
     "build:pages": "node --no-warnings --import tsx scripts/build-pages.mjs",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",

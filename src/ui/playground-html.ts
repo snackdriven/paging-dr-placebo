@@ -90,20 +90,21 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    button:hover { border-color: var(--accent); color: var(--accent); }
+    button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
     button.btn-primary {
       background: #0284c7;
       border-color: #38bdf8;
       color: #fff;
       font-weight: 600;
     }
-    button.btn-primary:hover { background: #0369a1; color: #fff; }
+    button.btn-primary:hover:not(:disabled) { background: #0369a1; color: #fff; }
     button.btn-danger {
       background: rgba(244, 63, 94, 0.14);
       border-color: rgba(244, 63, 94, 0.5);
       color: #fda4af;
     }
-    button.btn-danger:hover {
+    button.btn-danger:hover:not(:disabled) {
       background: rgba(244, 63, 94, 0.25);
       color: #fff;
     }
@@ -120,7 +121,10 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 14px 16px;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+    }
+    .pillar-card.pillar-dim {
+      opacity: 0.55;
     }
     .pillar-card.pillar-ok {
       border-color: rgba(16, 185, 129, 0.7);
@@ -297,14 +301,14 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       color: var(--text);
     }
 
-    /* Center Chat & Guided Chips */
+    /* Center Chat & Step-by-Step Story Player */
     .session-banner {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-      padding: 10px 14px;
+      padding: 11px 14px;
       border-radius: 9px;
       font-size: 0.84rem;
       margin-bottom: 12px;
@@ -312,12 +316,44 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       background: rgba(56, 189, 248, 0.08);
     }
     .session-banner.mode-scenario {
-      border-color: var(--warn);
-      background: rgba(245, 158, 11, 0.13);
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.11);
+    }
+
+    .story-stepper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+    }
+    .step-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-dot {
+      width: 26px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .step-dot.done {
+      background: rgba(56, 189, 248, 0.5);
+    }
+    .step-dot.current {
+      background: var(--accent);
+      width: 36px;
     }
 
     .chat-box {
-      height: 290px;
+      height: 275px;
       overflow-y: auto;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -328,11 +364,19 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       flex-direction: column;
       gap: 10px;
     }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     .turn {
       padding: 10px 14px;
       border-radius: 10px;
       max-width: 86%;
       font-size: 0.88rem;
+      animation: fadeSlideIn 0.2s ease-out;
+    }
+    .turn.latest-turn {
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.45);
     }
     .turn-CALLER {
       align-self: flex-end;
@@ -353,20 +397,49 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       flex-wrap: wrap;
     }
 
+    /* One-at-a-Time Guided Next Step Card */
+    .guided-step-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .guided-step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .guided-main-btn {
+      width: 100%;
+      text-align: left;
+      padding: 11px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #fff;
+      border-radius: 8px;
+    }
+    .guided-main-btn:hover:not(:disabled) {
+      background: #0369a1;
+      color: #fff;
+    }
+
     .chat-controls {
       display: grid;
       grid-template-columns: 185px minmax(0, 1fr) auto;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-top: 8px;
     }
 
-    .chip-group-label {
-      font-size: 0.76rem;
-      color: var(--muted);
-      margin-top: 8px;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }
     .preset-grid {
       display: flex;
       flex-wrap: wrap;
@@ -376,10 +449,6 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       font-size: 0.8rem;
       padding: 6px 12px;
       border-radius: 8px;
-    }
-    .preset-btn.step-btn {
-      background: rgba(56, 189, 248, 0.1);
-      border-color: rgba(56, 189, 248, 0.35);
     }
     .preset-btn.chaos-btn {
       background: rgba(244, 63, 94, 0.08);
@@ -690,34 +759,62 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
           <span class="badge badge-pass" id="activePersonaBadge">Honest AI</span>
         </div>
 
+        <!-- Story Step-by-Step Bar (Visible when watching a Pre-Made Story) -->
+        <div id="storyStepperBar" class="story-stepper" style="display: none;">
+          <div>
+            <div style="font-size: 0.82rem; font-weight: 700;" id="storyStepLabel">Step 1 of 4</div>
+            <div class="step-dots" id="storyStepDots" style="margin-top: 5px;"></div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button id="prevStepBtn" onclick="stepStory(-1)">← Previous</button>
+            <button class="btn-primary" id="nextStepBtn" onclick="stepStory(1)">Next Turn →</button>
+            <button id="showAllStepsBtn" onclick="showAllStorySteps()">Skip to End</button>
+          </div>
+        </div>
+
         <div class="chat-box" id="chatBox"></div>
 
-        <div class="chat-controls">
-          <select id="voiceEventSelect" aria-label="How Caller Speaks">
-            <option value="NORMAL_TURN">Speak Normally</option>
-            <option value="BARGE_IN">Interrupt the AI Mid-Sentence</option>
-            <option value="PARTIAL_UTTERANCE">Trail Off Mid-Sentence...</option>
-            <option value="FINAL_UTTERANCE">Finish Sentence</option>
-            <option value="SILENCE">Say Nothing for 10 Seconds</option>
-          </select>
-          <input
-            type="text"
-            id="callerInput"
-            placeholder="Type what to say, or click a quick button below..."
-            onkeydown="if(event.key==='Enter') sendCallerTurn()"
-          />
-          <button class="btn-primary" id="sendBtn" onclick="sendCallerTurn()">Say It</button>
+        <!-- One-at-a-Time Guided Next Step Box (For Live Call) -->
+        <div id="liveGuidedBox" class="guided-step-box">
+          <div class="guided-step-header">
+            <span id="guidedProgressLabel">Recommended Next Step (Step 1 of 3)</span>
+            <div class="step-dots" id="liveStepDots">
+              <div class="step-dot current"></div>
+              <div class="step-dot"></div>
+              <div class="step-dot"></div>
+            </div>
+          </div>
+          <button class="guided-main-btn" id="guidedMainBtn" onclick="runGuidedStep()">
+            <span id="guidedMainBtnText">Step 1: Ask to book Thursday at 10:00 AM</span>
+            <span>Say It →</span>
+          </button>
         </div>
 
-        <div class="chip-group-label">
-          Book an Appointment Step-by-Step (as <span id="chipCrewIndicator" style="color: var(--accent);">Philip J. Fry</span>):
-        </div>
-        <div class="preset-grid" id="happyChipsContainer"></div>
+        <!-- Optional Tricks & Custom Input Tucked Neatly -->
+        <details class="clean-accordion" id="offScriptAccordion">
+          <summary>
+            <span>Or Try a Plot Twist / Type Your Own Message</span>
+            <span class="badge badge-info">6 Options</span>
+          </summary>
+          <div class="preset-grid" id="chaosChipsContainer" style="margin-bottom: 10px;"></div>
 
-        <div class="chip-group-label" style="margin-top: 10px;">
-          Try Tricking or Interrupting the AI:
-        </div>
-        <div class="preset-grid" id="chaosChipsContainer"></div>
+          <div class="chat-controls">
+            <select id="voiceEventSelect" aria-label="How Caller Speaks">
+              <option value="NORMAL_TURN">Speak Normally</option>
+              <option value="BARGE_IN">Interrupt the AI Mid-Sentence</option>
+              <option value="PARTIAL_UTTERANCE">Trail Off Mid-Sentence...</option>
+              <option value="FINAL_UTTERANCE">Finish Sentence</option>
+              <option value="SILENCE">Say Nothing for 10 Seconds</option>
+            </select>
+            <input
+              type="text"
+              id="callerInput"
+              placeholder="Or type your own custom message..."
+              onkeydown="if(event.key==='Enter') sendCallerTurn()"
+            />
+            <button class="btn-primary" id="sendBtn" onclick="sendCallerTurn()">Say It</button>
+          </div>
+        </details>
       </div>
 
       <div class="panel">
@@ -740,7 +837,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         <div id="verdictHero" class="verdict-hero">
           <div class="verdict-hero-title" id="verdictHeroTitle">Ready to Fact-Check</div>
           <div class="verdict-hero-desc" id="verdictHeroDesc">
-            Start a phone call in the middle panel or pick any pre-made story on the left. We'll check if the AI tells the truth.
+            Click the blue <strong>Next Step</strong> button in the middle panel (or pick a story on the left) to walk through a call one turn at a time.
           </div>
         </div>
 
@@ -748,7 +845,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
 
         <!-- Broken Rules Always Shown Immediately -->
         <div id="failedInvariantsSection" style="display: none; margin-bottom: 10px;">
-          <div class="chip-group-label" style="color: #fb7185; margin-top: 0;">
+          <div class="chip-group-label" style="color: #fb7185; margin-top: 0; font-size: 0.78rem; font-weight: 700; margin-bottom: 6px;">
             What the AI Did Wrong:
           </div>
           <div class="inv-list" id="failedInvariantsList"></div>
@@ -793,6 +890,13 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
     let activeFilter = 'ALL';
     let scenarioCatalogCache = [];
     let batchResultsById = {};
+
+    // State for walking through a pre-made story one turn at a time
+    let currentStoryArtifact = null;
+    let currentStoryVisibleTurns = 0;
+
+    // Current live state cache for guided 1 -> 2 -> 3 button
+    let latestLiveState = null;
 
     const CREW_NAMES = {
       'PAT-001': 'Philip J. Fry',
@@ -981,45 +1085,105 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       document.querySelectorAll('.crew-card').forEach(card => {
         card.classList.toggle('active-crew', card.getAttribute('data-id') === id);
       });
-      document.getElementById('chipCrewIndicator').textContent = name;
       const activeLabel = document.getElementById('activeCrewLabel');
       if (activeLabel) {
         activeLabel.textContent = name;
       }
       renderQuickChips();
+      updateGuidedLiveStep(latestLiveState);
+    }
+
+    // Determine which single step (1 -> 2 -> 3) the live caller is currently on
+    function getLiveGuidedStepInfo(state) {
+      const c = activeCrew;
+      const turns = state ? state.turns : [];
+      const callerTurns = turns.filter(t => t.speaker === 'CALLER');
+
+      if (callerTurns.length === 0) {
+        return {
+          stepNum: 1,
+          totalSteps: 3,
+          headerText: 'Step 1 of 3 · Start the Call',
+          buttonText: 'Step 1: Ask to book Thursday at 10:00 AM (as ' + c.name + ')',
+          actionText: 'I am ' + c.id + ' and I want to book SLOT-PRV1-THU-10 with PRV-001.',
+          voice: 'NORMAL_TURN',
+          isReset: false
+        };
+      }
+
+      const hasVerifiedToken = state.snapshot && state.snapshot.verificationSessions && state.snapshot.verificationSessions.some(v => !v.revoked);
+      const lastAgent = [...turns].reverse().find(t => t.speaker === 'AGENT');
+      const lastClaim = lastAgent?.structuredClaim?.claimType;
+
+      if (!hasVerifiedToken && lastClaim !== 'CONFIRMATION_REQUESTED' && lastClaim !== 'CLAIM_BOOKED') {
+        return {
+          stepNum: 2,
+          totalSteps: 3,
+          headerText: 'Step 2 of 3 · Verify Identity',
+          buttonText: 'Step 2: Give ' + c.name.split(' ')[0] + '\\'s Birthday (' + c.dob + ') & PIN (' + c.pin + ')',
+          actionText: 'My DOB is ' + c.dob + ' and my PIN is ' + c.pin + '.',
+          voice: 'NORMAL_TURN',
+          isReset: false
+        };
+      }
+
+      if (lastClaim === 'CONFIRMATION_REQUESTED' || (hasVerifiedToken && lastClaim !== 'CLAIM_BOOKED' && lastClaim !== 'CLAIM_REJECTED')) {
+        return {
+          stepNum: 3,
+          totalSteps: 3,
+          headerText: 'Step 3 of 3 · Final Confirmation',
+          buttonText: 'Step 3: Say "Yes, please confirm and book that appointment!"',
+          actionText: 'Yes, please confirm and book that appointment.',
+          voice: 'NORMAL_TURN',
+          isReset: false
+        };
+      }
+
+      return {
+        stepNum: 3,
+        totalSteps: 3,
+        headerText: 'Call Complete · Check the Verdict on the Right',
+        buttonText: 'Start Fresh for Another Call',
+        actionText: '',
+        voice: 'NORMAL_TURN',
+        isReset: true
+      };
+    }
+
+    function updateGuidedLiveStep(state) {
+      const info = getLiveGuidedStepInfo(state);
+      document.getElementById('guidedProgressLabel').textContent = info.headerText;
+      document.getElementById('guidedMainBtnText').textContent = info.buttonText;
+
+      const dotsContainer = document.getElementById('liveStepDots');
+      dotsContainer.innerHTML = [1, 2, 3].map(n => {
+        if (info.isReset || n < info.stepNum) return '<div class="step-dot done"></div>';
+        if (n === info.stepNum) return '<div class="step-dot current"></div>';
+        return '<div class="step-dot"></div>';
+      }).join('');
+    }
+
+    async function runGuidedStep() {
+      const info = getLiveGuidedStepInfo(latestLiveState);
+      if (info.isReset) {
+        await applyConfigAndReset();
+      } else {
+        await quickSend(info.actionText, info.voice);
+      }
     }
 
     function renderQuickChips() {
       const c = activeCrew;
-      const happyContainer = document.getElementById('happyChipsContainer');
       const chaosContainer = document.getElementById('chaosChipsContainer');
 
-      const happyChips = [
-        {
-          label: 'Step 1: Ask for Thu 10am (' + c.name.split(' ')[0] + ')',
-          text: 'I am ' + c.id + ' and I want to book SLOT-PRV1-THU-10 with PRV-001.',
-          voice: 'NORMAL_TURN'
-        },
-        {
-          label: 'Step 2: Give Birthday & PIN (' + c.pin + ')',
-          text: 'My DOB is ' + c.dob + ' and my PIN is ' + c.pin + '.',
-          voice: 'NORMAL_TURN'
-        },
-        {
-          label: 'Step 3: Say "Yes, book it!"',
-          text: 'Yes, please confirm and book that appointment.',
-          voice: 'NORMAL_TURN'
-        },
+      const chaosChips = [
         {
           label: 'Ask What Times Are Open',
           text: 'What available slots does PRV-001 have? I am only checking availability.',
           voice: 'NORMAL_TURN'
-        }
-      ];
-
-      const chaosChips = [
+        },
         {
-          label: 'Switch to Tue 2pm Instead',
+          label: 'Switch Mind to Tuesday 2:00 PM',
           text: 'Actually, change that to Tuesday at 2pm (SLOT-PRV1-TUE-14) instead.',
           voice: 'NORMAL_TURN'
         },
@@ -1039,15 +1203,6 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
           voice: 'NORMAL_TURN'
         }
       ];
-
-      happyContainer.innerHTML = '';
-      happyChips.forEach(chip => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn step-btn';
-        btn.textContent = chip.label;
-        btn.onclick = () => quickSend(chip.text, chip.voice);
-        happyContainer.appendChild(btn);
-      });
 
       chaosContainer.innerHTML = '';
       chaosChips.forEach(chip => {
@@ -1087,6 +1242,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const res = await fetch('/api/playground/state');
       const data = await res.json();
       activeScenarioId = null;
+      currentStoryArtifact = null;
       renderScenarioList();
       renderPlayground(data, null);
     }
@@ -1123,7 +1279,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
               </div>
               <div style="color: var(--muted); font-size: 0.76rem; margin-top: 3px;">\${story.desc || humanizeText(s.title)}</div>
             </div>
-            <button class="\${isActive ? 'btn-primary' : ''}">\${isActive ? 'Watching' : 'Watch'}</button>
+            <button class="\${isActive ? 'btn-primary' : ''}">\${isActive ? 'Stepping' : 'Step Through'}</button>
           </div>
         \`;
       }).join('');
@@ -1136,6 +1292,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const lmStudioModel = document.getElementById('lmModelInput').value;
 
       activeScenarioId = null;
+      currentStoryArtifact = null;
       renderScenarioList();
 
       const res = await fetch('/api/playground/reset', {
@@ -1155,6 +1312,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const voiceEventType = voiceSelect.value;
 
       activeScenarioId = null;
+      currentStoryArtifact = null;
       renderScenarioList();
 
       btn.disabled = true;
@@ -1194,7 +1352,89 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         body: JSON.stringify({ scenarioId })
       });
       const artifact = await res.json();
-      renderScenarioArtifact(artifact);
+      currentStoryArtifact = artifact;
+      // Start at Turn 1 (or 2 if Turn 1 is caller + Turn 2 is first AI reply) so user walks through one exchange at a time!
+      const totalTurns = artifact.evidenceBundle.agentTurns.length;
+      currentStoryVisibleTurns = Math.min(2, totalTurns);
+      renderCurrentStoryStep();
+    }
+
+    function stepStory(delta) {
+      if (!currentStoryArtifact) return;
+      const total = currentStoryArtifact.evidenceBundle.agentTurns.length;
+      currentStoryVisibleTurns = Math.max(1, Math.min(total, currentStoryVisibleTurns + delta));
+      renderCurrentStoryStep();
+    }
+
+    function showAllStorySteps() {
+      if (!currentStoryArtifact) return;
+      currentStoryVisibleTurns = currentStoryArtifact.evidenceBundle.agentTurns.length;
+      renderCurrentStoryStep();
+    }
+
+    function renderCurrentStoryStep() {
+      if (!currentStoryArtifact) return;
+      const art = currentStoryArtifact;
+      const b = art.evidenceBundle;
+      const ev = art.evaluationResult;
+      const totalTurns = b.agentTurns.length;
+      const isFinalStep = currentStoryVisibleTurns >= totalTurns;
+
+      const modeSelect = document.getElementById('agentModeSelect');
+      if (modeSelect && art.scenario.agentMode) {
+        modeSelect.value = art.scenario.agentMode;
+      }
+      const faultSelect = document.getElementById('faultStageSelect');
+      if (faultSelect) {
+        const firstFault = art.scenario.faultRules && art.scenario.faultRules[0];
+        faultSelect.value = firstFault ? firstFault.stage : 'NONE';
+      }
+
+      // Update the Story Stepper Bar
+      const stepperBar = document.getElementById('storyStepperBar');
+      stepperBar.style.display = 'flex';
+      document.getElementById('storyStepLabel').textContent = isFinalStep
+        ? \`Turn \${currentStoryVisibleTurns} of \${totalTurns} (Story Complete - Verdict Revealed)\`
+        : \`Turn \${currentStoryVisibleTurns} of \${totalTurns} (Click "Next Turn" to continue)\`;
+
+      document.getElementById('storyStepDots').innerHTML = b.agentTurns.map((_, idx) => {
+        const stepNum = idx + 1;
+        if (stepNum < currentStoryVisibleTurns) return '<div class="step-dot done"></div>';
+        if (stepNum === currentStoryVisibleTurns) return '<div class="step-dot current"></div>';
+        return '<div class="step-dot"></div>';
+      }).join('');
+
+      document.getElementById('prevStepBtn').disabled = currentStoryVisibleTurns <= 1;
+      const nextBtn = document.getElementById('nextStepBtn');
+      nextBtn.disabled = isFinalStep;
+      nextBtn.textContent = isFinalStep ? 'Done' : 'Next Turn →';
+      document.getElementById('showAllStepsBtn').disabled = isFinalStep;
+
+      // Slice visible turns and progressive state
+      const visibleTurns = b.agentTurns.slice(0, currentStoryVisibleTurns);
+      const visibleTools = isFinalStep ? b.toolEvents : b.toolEvents.slice(0, Math.max(0, currentStoryVisibleTurns - 1));
+      const activeSnapshot = isFinalStep ? b.postSnapshot : b.preSnapshot;
+      const activeEval = isFinalStep ? ev : null;
+
+      renderPlayground({
+        config: {
+          engineType: 'SCENARIO_RUNNER',
+          agentMode: art.scenario.agentMode,
+          lmStudioModel: 'N/A',
+          faultRules: art.scenario.faultRules,
+          clockIso: new Date(activeSnapshot.capturedAtMs).toISOString()
+        },
+        llmTelemetry: { totalTokens: 0, calls: 0 },
+        snapshot: activeSnapshot,
+        turns: visibleTurns,
+        toolEvents: visibleTools,
+        voiceEvents: b.voiceEvents,
+        auditEvents: isFinalStep ? b.auditEvents : [],
+        evaluation: activeEval,
+        isSteppingInProgress: !isFinalStep,
+        currentStep: currentStoryVisibleTurns,
+        totalSteps: totalTurns
+      }, art.scenario);
     }
 
     async function runAllCatalogScenarios() {
@@ -1219,7 +1459,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
 
         const banner = document.getElementById('batchSummaryBanner');
         banner.style.display = 'block';
-        banner.innerHTML = \`<strong>All \${total} stories verified:</strong> \${passCount} honest calls + \${caughtCount} lies/hacks caught red-handed. Click any story below to watch it.\`;
+        banner.innerHTML = \`<strong>All \${total} stories verified:</strong> \${passCount} honest calls + \${caughtCount} lies/hacks caught red-handed. Click any story below to step through it.\`;
 
         renderScenarioList();
       } finally {
@@ -1228,39 +1468,16 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       }
     }
 
-    function renderScenarioArtifact(art) {
-      const b = art.evidenceBundle;
-      const ev = art.evaluationResult;
-
-      const modeSelect = document.getElementById('agentModeSelect');
-      if (modeSelect && art.scenario.agentMode) {
-        modeSelect.value = art.scenario.agentMode;
-      }
-      const faultSelect = document.getElementById('faultStageSelect');
-      if (faultSelect) {
-        const firstFault = art.scenario.faultRules && art.scenario.faultRules[0];
-        faultSelect.value = firstFault ? firstFault.stage : 'NONE';
-      }
-
-      renderPlayground({
-        config: {
-          engineType: 'SCENARIO_RUNNER',
-          agentMode: art.scenario.agentMode,
-          lmStudioModel: 'N/A',
-          faultRules: art.scenario.faultRules,
-          clockIso: new Date(b.postSnapshot.capturedAtMs).toISOString()
-        },
-        llmTelemetry: { totalTokens: 0, calls: 0 },
-        snapshot: b.postSnapshot,
-        turns: b.agentTurns,
-        toolEvents: b.toolEvents,
-        voiceEvents: b.voiceEvents,
-        auditEvents: b.auditEvents,
-        evaluation: ev
-      }, art.scenario);
-    }
-
     function renderPlayground(state, inspectedScenario) {
+      if (!inspectedScenario) {
+        latestLiveState = state;
+        document.getElementById('storyStepperBar').style.display = 'none';
+        document.getElementById('liveGuidedBox').style.display = 'block';
+        updateGuidedLiveStep(state);
+      } else {
+        document.getElementById('liveGuidedBox').style.display = 'none';
+      }
+
       const timeOnly = state.config.clockIso ? state.config.clockIso.slice(11, 16) + ' AM' : '9:00 AM';
       document.getElementById('clockDisplay').textContent = 'Clinic Clock: ' + timeOnly;
       document.getElementById('llmTelemetryBadge').textContent =
@@ -1284,7 +1501,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         modeBanner.className = 'session-banner mode-scenario';
         modeBanner.innerHTML = \`
           <div>
-            <strong>Watching Story:</strong> \${story.title}
+            <strong>Stepping Through Story:</strong> \${story.title}
             <div style="color: var(--muted); font-size: 0.77rem;">\${story.desc}</div>
           </div>
           <button onclick="applyConfigAndReset()">Back to Live Call</button>
@@ -1299,23 +1516,25 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         \`;
       }
 
-      // Render Chat Turns in Plain Human English
+      // Render Chat Turns in Plain Human English (Highlighting the newest turn!)
       const chatBox = document.getElementById('chatBox');
       if (state.turns.length === 0) {
         chatBox.innerHTML = \`
           <div style="color: var(--muted); font-size: 0.88rem; margin: auto; text-align: center; max-width: 430px;">
-            <strong>Start a phone call</strong><br/>
-            Click <strong>Step 1 → Step 2 → Step 3</strong> below to book an appointment as <strong>\${activeCrew.name}</strong>, or click any story on the left to watch how the fact-checker catches lies.
+            <strong>Ready to start a phone call</strong><br/>
+            Click the blue <strong>Step 1</strong> button right below this box to start talking to the clinic AI one step at a time.
           </div>
         \`;
       } else {
-        chatBox.innerHTML = state.turns.map(t => {
+        chatBox.innerHTML = state.turns.map((t, idx) => {
+          const isLatest = idx === state.turns.length - 1;
           const cleanText = t.text ? humanizeText(t.text) : '<em>[Stayed silent for 10 seconds]</em>';
           const claimLabel = t.structuredClaim ? HUMAN_CLAIMS[t.structuredClaim.claimType] : null;
           return \`
-            <div class="turn turn-\${t.speaker}">
+            <div class="turn turn-\${t.speaker} \${isLatest ? 'latest-turn' : ''}">
               <div><strong>\${t.speaker === 'CALLER' ? 'Caller' : 'Clinic AI'}:</strong> \${cleanText}</div>
               <div class="turn-meta">
+                <span>Turn \${idx + 1}</span>
                 \${t.voiceEventType === 'BARGE_IN' ? '<span class="badge badge-sim">Interrupted the AI</span>' : ''}
                 \${t.voiceEventType === 'PARTIAL_UTTERANCE' ? '<span class="badge badge-sim">Still speaking...</span>' : ''}
                 \${t.playbackCanceled ? '<span class="badge badge-fail">AI audio cut off</span>' : ''}
@@ -1338,7 +1557,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       document.getElementById('pillarAttempt').textContent =
         lastTool ? (HUMAN_TOOLS[lastTool.toolName] || lastTool.toolName) : 'No action taken yet';
       document.getElementById('pillarAttemptSub').textContent =
-        lastTool ? \`Step #\${lastTool.sequenceId} behind the scenes\` : 'Waiting for caller';
+        lastTool ? \`Step #\${lastTool.sequenceId} behind the scenes\` : 'Waiting for caller confirmation';
 
       let serverHeadline = 'Waiting for AI';
       let serverSub = 'Phone line & server connection';
@@ -1361,7 +1580,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
         'COMMITTED': 'Saved on the calendar',
         'REJECTED': 'Blocked (Calendar unchanged)',
         'CONFLICT': 'Blocked (Slot already taken)',
-        'NOT_ATTEMPTED': 'No changes made'
+        'NOT_ATTEMPTED': state.isSteppingInProgress ? 'Call still in progress...' : 'No changes made'
       };
       document.getElementById('pillarPersisted').textContent = humanPersisted[persistedOutcome] || persistedOutcome;
 
@@ -1392,7 +1611,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       } else {
         card1.className = 'pillar-card';
         badge1.className = 'badge badge-info';
-        badge1.textContent = claimType === 'NONE' ? 'Waiting' : 'Talking';
+        badge1.textContent = claimType === 'NONE' ? 'Waiting' : 'In Progress';
         document.getElementById('pillarClaimSub').textContent = 'What the patient heard on the phone';
       }
 
@@ -1423,7 +1642,7 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       } else {
         card4.className = 'pillar-card';
         badge4.className = 'badge badge-info';
-        badge4.textContent = 'Unchanged';
+        badge4.textContent = state.isSteppingInProgress ? 'Pending' : 'Unchanged';
       }
 
       // Render Visual Doctor Schedule Cards
@@ -1466,12 +1685,23 @@ export const PLAYGROUND_HTML = `<!DOCTYPE html>
       const passedList = document.getElementById('invariantsList');
       const invSummary = document.getElementById('invSummaryBadge');
 
-      if (!state.evaluation) {
+      if (state.isSteppingInProgress) {
+        vBadge.className = 'badge badge-info';
+        vBadge.textContent = \`Turn \${state.currentStep} of \${state.totalSteps}\`;
+        hero.className = 'verdict-hero';
+        heroTitle.textContent = 'Call in Progress...';
+        heroDesc.innerHTML = 'Click <strong>Next Turn →</strong> in the middle panel to watch the next line of the phone call and reveal the final verdict.';
+        claimBox.innerHTML = '';
+        failedSection.style.display = 'none';
+        invSummary.className = 'badge badge-info';
+        invSummary.textContent = 'Checking...';
+        passedList.innerHTML = '';
+      } else if (!state.evaluation) {
         vBadge.className = 'badge badge-info';
         vBadge.textContent = 'Waiting';
         hero.className = 'verdict-hero';
         heroTitle.textContent = 'Ready to Fact-Check';
-        heroDesc.innerHTML = 'Start a call in the middle panel or pick any story on the left. We\\'ll check if the AI is telling the truth.';
+        heroDesc.innerHTML = 'Click the blue <strong>Step 1</strong> button in the middle panel (or pick a story on the left) to walk through a call one turn at a time.';
         claimBox.innerHTML = '';
         failedSection.style.display = 'none';
         invSummary.className = 'badge badge-info';
